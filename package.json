@@ -1,0 +1,42 @@
+{
+  "name": "tiny-fancy-charts",
+  "private": false,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./es/pie3d": {
+      "import": "./dist/es/pie3d.js",
+      "require": "./dist/es/pie3d.cjs",
+      "types": "./dist/charts/pie3d/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@types/d3-color": "^3.1.3",
+    "@types/d3-selection": "^3.0.10",
+    "@types/d3-shape": "^3.1.6",
+    "d3-color": "^3.1.0",
+    "d3-selection": "^3.0.0",
+    "d3-shape": "^3.2.0",
+    "glob": "^10.3.12",
+    "mitt": "^3.0.1",
+    "three": "^0.163.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/three": "^0.163.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.8.3",
+    "vue-tsc": "^2.0.6"
+  }
+}
