@@ -15,6 +15,7 @@ Tiny Fancy Charts is a simple and lightweight library to create fancy charts for
 npm install tiny-fancy-charts
 
 # or
+
 pnpm install tiny-fancy-charts
 ```
 
@@ -34,7 +35,7 @@ const pie3d = new Pie3d(containerDom, {
   opacity: 0.8,
 
   // Inner Radius
-  innerRadius: 0.7,4
+  innerRadius: 0.7,
 
   // Hover Height (Multiplying by height)
   hoverHeight: 40,
