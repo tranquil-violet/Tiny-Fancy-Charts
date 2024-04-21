@@ -54,8 +54,12 @@ const pie3d = new Pie3d(containerDom, {
 
   // Tilt angle, larger and more perpendicular
   y: 5,
+
+  // Target X
+  targetY: 0.2,
 });
 
+/** Set Data */
 pie3d.setData([
   { label: 'A', value: 100, color: l1 },
   { label: 'B', value: 200, color: l2 },
@@ -63,4 +67,10 @@ pie3d.setData([
   { label: 'D', value: 400, color: l4 },
   { label: 'E', value: 500, color: l5 },
 ]);
+
+/** Set Hover */
+pie3d.setHover("A");
+
+/*** Clear Hover */
+pie3d.clearHover();
 ```

@@ -25,6 +25,7 @@ const defaultOptions = {
   dark: 0.5,
   ratio: 1.6,
   y: 5,
+  targetY: 0.2,
 };
 
 const findParent = (object: THREE.Object3D): THREE.Object3D | null => {
@@ -49,6 +50,8 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
     this.data = data || [];
 
     this.init();
+
+    this.pointermove = this.pointermove.bind(this);
   }
 
   setData(data: Pie3dDataType): void {
@@ -57,11 +60,56 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
   }
 
   scene = new THREE.Scene();
+  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 1000);
   renderer = new THREE.WebGLRenderer();
+
+  pointer = new THREE.Vector2(-10, -10);
+  raycaster = new THREE.Raycaster();
 
   hoverItem: THREE.Group | null = null;
 
-  timer!: number;
+  pointermove = (e: MouseEvent) => {
+    const width = this.el.clientWidth;
+    const height = this.el.clientHeight;
+    this.pointer.x = (e.offsetX / width) * 2 - 1;
+    this.pointer.y = -(e.offsetY / height) * 2 + 1;
+
+    let oldGroup = this.hoverItem;
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    if (this.scene.children.length) {
+      // 计算物体和射线的焦点
+      const intersects = this.raycaster.intersectObjects(this.intersectObjects, false);
+
+      const group = findParent(intersects?.[0]?.object);
+      if (!group) this.hoverItem = null;
+      if (group && group instanceof THREE.Group) this.hoverItem = group;
+      if (oldGroup !== this.hoverItem) {
+        this.updateHover();
+        if (this.hoverItem) {
+          this.events.emit('hover', this.hoverItem.userData);
+        } else {
+          this.events.emit('hover', null);
+        }
+      }
+    }
+  };
+
+  pointerout = () => {
+    this.hoverItem = null;
+    this.updateHover();
+    this.events.emit('hover', null);
+  };
+
+  updateHover() {
+    this.scene.children[0]?.children.forEach((group) => {
+      if (group instanceof THREE.Group && this.hoverItem === group) {
+        group.scale.y = (this.options?.hoverHeight || defaultOptions.hoverHeight) / (this.options?.height || defaultOptions.height) || 1;
+      } else {
+        group.scale.y = 1;
+      }
+    });
+    this.renderer.render(this.scene, this.camera);
+  }
 
   init() {
     const el = this.el;
@@ -70,63 +118,20 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
 
     const renderer = this.renderer;
 
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 1000);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(this.options?.ratio || defaultOptions.ratio);
 
     el.appendChild(renderer.domElement);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.update();
+    const controls = new OrbitControls(this.camera, renderer.domElement);
     controls.enabled = false;
-    camera.position.z = 10;
-    camera.position.y = this.options?.y || defaultOptions.y;
+    this.camera.position.z = 10;
+    this.camera.position.y = this.options?.y || defaultOptions.y;
+    controls.target.y = this.options?.targetY || defaultOptions.targetY;
+    controls.update();
 
-    const raycaster = new THREE.Raycaster();
-
-    let pointer = new THREE.Vector2();
-    pointer.x = -10;
-    pointer.y = -10;
-    el.addEventListener('pointermove', (event) => {
-      pointer.x = (event.offsetX / width) * 2 - 1;
-      pointer.y = -(event.offsetY / height) * 2 + 1;
-    });
-
-    const animate = () => {
-      let oldGroup = this.hoverItem;
-      raycaster.setFromCamera(pointer, camera);
-
-      this.timer = requestAnimationFrame(animate);
-      controls.update();
-
-      if (this.scene.children.length) {
-        // 计算物体和射线的焦点
-        const intersects = raycaster.intersectObjects(this.intersectObjects, false);
-
-        const group = findParent(intersects?.[0]?.object);
-        if (!group) this.hoverItem = null;
-        if (group && group instanceof THREE.Group) this.hoverItem = group;
-        if (oldGroup !== this.hoverItem) {
-          if (this.hoverItem) {
-            this.events.emit('hover', this.hoverItem.userData);
-          } else {
-            this.events.emit('hover', null);
-          }
-        }
-      }
-
-      this.scene.children[0]?.children.forEach((group) => {
-        if (group instanceof THREE.Group && this.hoverItem === group) {
-          group.scale.y = (this.options?.hoverHeight || defaultOptions.hoverHeight) / (this.options?.height || defaultOptions.height) || 1;
-        } else {
-          group.scale.y = 1;
-        }
-      });
-
-      renderer.render(this.scene, camera);
-    };
-
-    animate();
+    el.addEventListener('pointermove', this.pointermove);
+    el.addEventListener('pointerout', this.pointerout);
 
     super.init();
   }
@@ -134,6 +139,22 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
   drawClear(): void {
     this.intersectObjects = [];
     this.scene.clear();
+  }
+
+  setHover(label: string): void {
+    this.scene.children[0]?.children.forEach((group) => {
+      if (group instanceof THREE.Group && group.userData.label === label) {
+        this.hoverItem = group;
+      }
+    });
+
+    this.updateHover();
+  }
+
+  clearHover(): void {
+    this.hoverItem = null;
+
+    this.updateHover();
   }
 
   intersectObjects: THREE.Object3D[] = [];
@@ -166,9 +187,11 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
       const color = d3.rgb(d.data.color || '#fff').formatHex();
       const darkColor = d3.rgb(color).darker(dark).formatHex();
 
+      const { startAngle, endAngle } = d;
+
       // 柱状体顶面
       {
-        const geometry = new THREE.RingGeometry(innerRadius, 1, 32, 1, d.startAngle, d.endAngle - d.startAngle);
+        const geometry = new THREE.RingGeometry(innerRadius, 1, 32, 1, startAngle, endAngle - startAngle);
         const material = new THREE.MeshBasicMaterial({
           color: color,
           side: THREE.DoubleSide,
@@ -196,7 +219,7 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
       }
       // 柱状体底面
       {
-        const geometry = new THREE.RingGeometry(innerRadius, 1, 32, 1, d.startAngle, d.endAngle - d.startAngle);
+        const geometry = new THREE.RingGeometry(innerRadius, 1, 32, 1, startAngle, endAngle - startAngle);
         const material = new THREE.MeshBasicMaterial({
           color: color,
           side: THREE.DoubleSide,
@@ -223,7 +246,7 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
       // 柱状体外侧
       {
         const points: THREE.Vector2[] = [new THREE.Vector2(1, 0), new THREE.Vector2(1, pieHeight)];
-        const geometry = new THREE.LatheGeometry(points, 32, d.startAngle, d.endAngle - d.startAngle);
+        const geometry = new THREE.LatheGeometry(points, 32, startAngle, endAngle - startAngle);
         const material = new THREE.MeshBasicMaterial({
           color: darkColor,
           side: THREE.DoubleSide,
@@ -240,7 +263,7 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
       // 柱状体内侧
       {
         const points: THREE.Vector2[] = [new THREE.Vector2(innerRadius, 0), new THREE.Vector2(innerRadius, pieHeight)];
-        const geometry = new THREE.LatheGeometry(points, 32, d.startAngle, d.endAngle - d.startAngle);
+        const geometry = new THREE.LatheGeometry(points, 32, startAngle, endAngle - startAngle);
         const material = new THREE.MeshBasicMaterial({
           color: darkColor,
           side: THREE.DoubleSide,
@@ -275,7 +298,7 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
         line.position.y = pieHeight / 2;
         line.position.x = 1 - (1 - innerRadius!) / 2;
 
-        planeGroup.rotation.y = d.startAngle - Math.PI / 2;
+        planeGroup.rotation.y = startAngle - Math.PI / 2;
         planeGroup.add(plane, line);
 
         this.intersectObjects.push(plane);
@@ -296,7 +319,7 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
         plane.position.y = pieHeight / 2;
         plane.position.x = 1 - (1 - innerRadius!) / 2;
 
-        planeGroup.rotation.y = d.endAngle - Math.PI / 2;
+        planeGroup.rotation.y = endAngle - Math.PI / 2;
         planeGroup.add(plane);
         this.intersectObjects.push(plane);
         group.add(planeGroup);
@@ -311,6 +334,8 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
 
     this.scene.add(mainGroup);
 
+    this.renderer.render(this.scene, this.camera);
+
     super.draw();
   }
 
@@ -319,9 +344,10 @@ export class Pie3d extends BaseCharts<Pie3dDataType, Partial<typeof defaultOptio
     this.renderer.domElement.remove();
     this.renderer.dispose();
 
-    cancelAnimationFrame(this.timer);
-
     this.el.innerHTML = '';
+
+    this.el.removeEventListener('pointermove', this.pointermove);
+    this.el.removeEventListener('pointerout', this.pointerout);
 
     super.destroy();
   }
