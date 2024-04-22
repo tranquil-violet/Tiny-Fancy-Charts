@@ -99,8 +99,12 @@ const pie3d = new PieCircle(containerDom, {
   // Bar Padding
   itemPadding: 5,
 
-  // Bar Item Height
-  bgColor: '#fff',
+  // Bar Length Calculation Method 
+  bgLength: 'full' as 'full' | 'max' | 'data',
+
+  // Bar Item Color
+  bgColor: '#fff' as string | ((d: PieCircleDataItemType, index: number) => string),
+
 });
 
 /** Set Data */

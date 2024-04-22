@@ -20,6 +20,7 @@ const defaultOptions = {
   outerRadius: 1,
   itemGap: 2,
   itemPadding: 5,
+  bgLength: 'full' as 'full' | 'max' | 'data',
   bgColor: '#fff' as string | ((d: PieCircleDataItemType, index: number) => string),
 };
 
@@ -56,12 +57,13 @@ export class PieCircle extends BaseCharts<PieCircleDataType, Partial<typeof defa
   band = d3.scaleBand();
   bgband = d3.scaleBand();
   arc = d3.arc<PieCircleDataItemType>();
+  bgArc = d3.arc<PieCircleDataItemType>();
 
   draw(): void {
     this.drawClear();
 
     const { data: _data, options } = this;
-    const { rotation, length, innerRadius, outerRadius, itemGap, itemPadding, bgColor } = Object.assign(defaultOptions, options);
+    const { rotation, length, innerRadius, outerRadius, itemGap, itemPadding, bgColor, bgLength } = Object.assign(defaultOptions, options);
 
     const width = this.el.clientWidth;
     const height = this.el.clientHeight;
@@ -97,6 +99,21 @@ export class PieCircle extends BaseCharts<PieCircleDataType, Partial<typeof defa
       .paddingInner(itemGap / itemWidth)
       .range([inner, outer]);
 
+    this.bgArc
+      .innerRadius((_d) => (this.band(_d.label) || 0) + this.band.bandwidth() / 2 - 0.1)
+      .outerRadius((_d) => (this.band(_d.label) || 0) + this.band.bandwidth() / 2 + 0.1)
+      .startAngle(() => rotation * (Math.PI / 180))
+      .endAngle((d) => {
+        if (bgLength === 'data') {
+          return rotation * (Math.PI / 180) + (d.value / max) * (length * (Math.PI / 180)) * 0.999;
+        }
+        if (bgLength === 'max') {
+          return rotation * (Math.PI / 180) + length * (Math.PI / 180) * 0.999;
+        }
+        return rotation * (Math.PI / 180) + Math.PI * 2 * 0.999;
+      })
+      .cornerRadius(size);
+
     const ringsGroup = this.svg
       .append('g')
       .classed('ringGroup', true)
@@ -113,7 +130,7 @@ export class PieCircle extends BaseCharts<PieCircleDataType, Partial<typeof defa
         return typeof bgColor === 'function' ? bgColor(d, index) : bgColor;
       })
       .style('stroke-width', this.bgband.bandwidth() + 'px')
-      .attr('d', this.arc);
+      .attr('d', this.bgArc);
 
     ringsGroup
       .selectAll('.ring')
