@@ -16,6 +16,11 @@
       "import": "./dist/es/pie3d.js",
       "require": "./dist/es/pie3d.cjs",
       "types": "./dist/charts/pie3d/index.d.ts"
+    },
+    "./es/pieCircle": {
+      "import": "./dist/es/pieCircle.js",
+      "require": "./dist/es/pieCircle.cjs",
+      "types": "./dist/charts/pieCircle/index.d.ts"
     }
   },
   "dependencies": {

@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue';
 
 const isBuild = process.env.NODE_ENV === 'production';
 
-const entryList = globSync('lib/charts/*/index.ts').map((file) => ['es/' + file.replace('\\', '/').split('/')[2], resolve(file)]);
+const entryList = globSync('lib/charts/*/index.ts').map((file) => ['es/' + file.replace(/\\/g, '/').split('/')[2], resolve(file)]);
 entryList.push(['index', resolve('lib/charts/index.ts')]);
 
 // https://vitejs.dev/config/
