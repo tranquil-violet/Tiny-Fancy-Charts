@@ -74,3 +74,41 @@ pie3d.setHover("A");
 /*** Clear Hover */
 pie3d.clearHover();
 ```
+
+### PieCircle
+
+```typescript
+import { PieCircle } from 'tiny-fancy-charts/es/pie3d';
+
+const pie3d = new PieCircle(containerDom, {
+  // Total Length
+  length: 270,
+
+  // Start Angle
+  rotation: 0,
+
+  // Inner Radius
+  innerRadius: 0.5,
+
+  // Outer Radius
+  outerRadius: 1,
+
+  // Bar Gap
+  itemGap: 2,
+
+  // Bar Padding
+  itemPadding: 5,
+
+  // Bar Item Height
+  bgColor: '#fff',
+});
+
+/** Set Data */
+pie3d.setData([
+  { label: 'A', value: 100, color: l1 },
+  { label: 'B', value: 200, color: l2 },
+  { label: 'C', value: 300, color: l3 },
+  { label: 'D', value: 400, color: l4 },
+  { label: 'E', value: 500, color: l5 },
+]);
+```

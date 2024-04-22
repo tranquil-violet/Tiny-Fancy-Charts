@@ -23,6 +23,7 @@
     "@types/d3-selection": "^3.0.10",
     "@types/d3-shape": "^3.1.6",
     "d3-color": "^3.1.0",
+    "d3-scale": "^4.0.2",
     "d3-selection": "^3.0.0",
     "d3-shape": "^3.2.0",
     "glob": "^10.3.12",
@@ -31,6 +32,7 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@types/d3-scale": "^4.0.8",
     "@types/node": "^20.12.7",
     "@types/three": "^0.163.0",
     "@vitejs/plugin-vue": "^5.0.4",

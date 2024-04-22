@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { Pie3d } from '../lib/charts/pie3d/index';
+import { PieCircle } from '../lib/charts/pieCircle/index';
 
 const domRef = ref<HTMLElement>();
 onMounted(() => {
-  const pie3d = new Pie3d(domRef.value!);
+  const pie3d = new PieCircle(domRef.value!);
 
   // pie3d.draw();
   pie3d.setData([
