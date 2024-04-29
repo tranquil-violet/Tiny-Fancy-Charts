@@ -1,7 +1,7 @@
 {
   "name": "tiny-fancy-charts",
   "private": false,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,12 +21,18 @@
       "import": "./dist/es/pieCircle.js",
       "require": "./dist/es/pieCircle.cjs",
       "types": "./dist/charts/pieCircle/index.d.ts"
+    },
+    "./es/multiBar": {
+      "import": "./dist/es/multiBar.js",
+      "require": "./dist/es/multiBar.cjs",
+      "types": "./dist/charts/multiBar/index.d.ts"
     }
   },
   "dependencies": {
     "@types/d3-color": "^3.1.3",
     "@types/d3-selection": "^3.0.10",
     "@types/d3-shape": "^3.1.6",
+    "d3-axis": "^3.0.0",
     "d3-color": "^3.1.0",
     "d3-scale": "^4.0.2",
     "d3-selection": "^3.0.0",
@@ -37,6 +43,7 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@types/d3-axis": "^3.0.6",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^20.12.7",
     "@types/three": "^0.163.0",

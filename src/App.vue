@@ -1,18 +1,37 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { PieCircle } from '../lib/charts/pieCircle/index';
+import { MultiBar } from '../lib/charts/multiBar/index';
 
 const domRef = ref<HTMLElement>();
 onMounted(() => {
-  const pie3d = new PieCircle(domRef.value!);
+  const pie3d = new MultiBar(domRef.value!, {
+    itemRender: (legend: string, itemLabel: string, value: number) => {
+      const dom = document.createElement('div');
+
+      dom.style.width = '100%';
+      dom.style.height = '100%';
+      dom.style.display = 'flex';
+      dom.style.justifyContent = 'center';
+      dom.style.alignItems = 'center';
+      dom.style.color = 'white';
+      dom.style.background = legend;
+      dom.innerText = `${itemLabel}: ${value}`;
+
+      return dom;
+    },
+  });
 
   // pie3d.draw();
-  pie3d.setData([
-    { label: 'Basic', color: '#2B80FF', value: 50 },
-    { label: 'Plus', color: '#E5FF47', value: 20 },
-    { label: 'Lite', color: '#FF912B', value: 30 },
-    { label: 'Elite', color: '#FF3030', value: 18 },
-  ]);
+  pie3d.setData({
+    legends: [
+      { label: 'a', color: 'red' },
+      { label: 'b', color: 'blue' },
+    ],
+    data: [
+      { label: 'A1', values: [1, 2] },
+      { label: 'A2', values: [2, 1] },
+    ],
+  });
 
   pie3d.events.on('hover', (e) => {
     console.log(e);
